@@ -164,16 +164,18 @@ class CrestronHub:
 
     async def stop(self, event):
         """Clean shutdown."""
-        if self.from_hub:
+        try:
             self.hub.remove_callback(self.join_change_callback)
-
-        if self.tracker is not None:
-            self.tracker.async_remove()
-
-        if self.button_listener_remove is not None:
-            self.button_listener_remove()
-
-        await self.hub.stop()
+            if self.tracker is not None:
+                tracker, self.tracker = self.tracker, None
+                tracker.async_remove()
+        finally:
+            try:
+                if self.button_listener_remove is not None:
+                    remove, self.button_listener_remove = self.button_listener_remove, None
+                    remove()
+            finally:
+                await self.hub.stop()
 
     @callback
     def handle_button_press(self, event):

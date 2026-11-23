@@ -8,7 +8,7 @@ from unittest import IsolatedAsyncioTestCase
 from unittest.mock import AsyncMock, Mock, patch
 
 
-def load_component():
+def load_component(component_root=None):
     """Load the actual integration without needing a Home Assistant install.
 
     These tests exercise initialization and shutdown, not configuration
@@ -54,6 +54,7 @@ def load_component():
     module(
         "homeassistant.const",
         EVENT_HOMEASSISTANT_STOP="homeassistant_stop",
+        EVENT_CALL_SERVICE="call_service",
         CONF_VALUE_TEMPLATE="value_template",
         CONF_ATTRIBUTE="attribute",
         CONF_ENTITY_ID="entity_id",
@@ -72,7 +73,7 @@ def load_component():
     )
 
     path = (
-        Path(__file__).resolve().parents[1]
+        (component_root or Path(__file__).resolve().parents[1])
         / "custom_components"
         / "crestron"
         / "__init__.py"

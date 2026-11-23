@@ -3,13 +3,53 @@
 This directory preserves the installed local variant of the legacy Crestron
 component, captured on 23 November 2026. Its source is in
 `custom_components/crestron/`. The files are copied unchanged from the active
-installation; `source-sha256.json` records their SHA-256 hashes.
+installation in commit `7f97bfd`; `source-sha256.json` records those original
+SHA-256 hashes. The current branch also includes the reliability update below.
 
 The repository's root component remains unchanged. The current upstream revision
 contains newer transport and shutdown fixes that are not all present in this
 local variant. Keeping both versions makes the installation reproducible without
 silently replacing those fixes. This is a source snapshot, not a merged release
 or a recommendation to downgrade an existing installation.
+
+## Connection and shutdown reliability update
+
+The local variant now incorporates the root component's tested transport
+lifecycle implementation from `f977b9b`. Only `crestron.py` and `__init__.py`
+change in the installed component:
+
+- A retired connection cannot mark a replacement connection unavailable.
+- Subscriber exceptions are logged independently so other subscribers still run.
+- Shutdown closes accepted clients, cancels their handlers and closes the listener.
+- Writer closure has a five-second timeout followed by transport abort.
+- Template and button listeners are detached at most once, and transport shutdown
+  still runs if either listener cleanup raises.
+
+The local guarded-write implementation and command encodings remain intact, as
+do all custom entity platforms, join mappings and entity identities. This update
+does not migrate to `crestron-ha` or claim to resolve the individual bathroom
+entity's loading problem. Serial decoding follows upstream: invalid UTF-8 closes
+the connection rather than silently discarding invalid bytes.
+
+Validation: 25 tests passed against the root transport plus local hub cleanup;
+another 18 transport tests passed against this updated local variant, including
+a real localhost connection. Run the latter with:
+
+```sh
+CRESTRON_COMPONENT_ROOT="$PWD/local-installation" python3 -m unittest discover -s tests -p test_xsig.py -v
+```
+
+The original installed files remain recoverable from commit `7f97bfd`. The source
+hash manifest describes that original snapshot, not the updated files. A Home
+Assistant restart is required to load changed Python source; offline tests do not
+verify the real Crestron processor's wiring or behavior.
+
+Deployment verification on 23 November 2026: the two original modules were backed
+up under `custom_components/crestron/backups/before-reliability-20261123-130218/`
+before replacement. `ha core check` passed, Core restarted successfully, and an
+established TCP connection was observed on the configured XSIG port 16384. The
+reviewed startup logs showed no Crestron-specific errors beyond Home Assistant's
+standard custom-integration warning. No physical device commands were issued.
 
 ## Differences from the root component
 
@@ -25,7 +65,7 @@ or a recommendation to downgrade an existing installation.
 | Switches | Pulsed switches send a 500 ms pulse only when feedback differs from the requested state. |
 | Climate | Uses modern climate entities and enums with join-derived identity. |
 | Media players | Provides pulsed power, mute and volume-step commands. `source_number_join` is used as a digital power-on pulse; there is no source-selection feature in this variant. It requires `off_join`, `volume_up_join` and `volume_down_join`, unlike the root configuration. |
-| Transport | Includes guarded socket writes, connection cleanup and callback iteration over a copy. It predates some root-component reconnect and shutdown fixes; do not assume equivalent lifecycle guarantees. |
+| Transport | Combines the public reconnect, callback-isolation and shutdown fixes with local guarded socket writes. |
 
 Most platforms filter feedback callbacks to the joins they use, plus changes in
 connection availability. Join-derived unique IDs must remain distinct within each
@@ -81,8 +121,8 @@ claim authorship of the pre-existing installed changes.
 - Checked relative constant imports against the snapshot's `const.py`.
 - The 21 existing root-component tests passed. They exercise the root component,
   not this snapshot; they do not establish runtime compatibility of the variant.
-- No live Home Assistant restart, hardware commands or end-to-end snapshot tests
-  were performed for this import.
+- The original import performed no live restart or hardware commands. The later
+  reliability update is covered by the transport and cleanup tests above.
 
 Only active component source and the component manifest are included. Home
 Assistant credentials, configuration, entity registries, databases, logs, cached

@@ -1,6 +1,7 @@
 """TCP protocol regressions, runnable without Home Assistant installed."""
 
 import asyncio
+import os
 import importlib.util
 from pathlib import Path
 import unittest
@@ -9,7 +10,8 @@ from unittest.mock import patch
 
 SPEC = importlib.util.spec_from_file_location(
     "crestron_xsig",
-    Path(__file__).resolve().parents[1] / "custom_components/crestron/crestron.py",
+    Path(os.environ.get("CRESTRON_COMPONENT_ROOT", Path(__file__).resolve().parents[1]))
+    / "custom_components/crestron/crestron.py",
 )
 MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
