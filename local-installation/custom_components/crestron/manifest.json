@@ -1,0 +1,9 @@
+{
+  "domain": "crestron",
+  "name": "Crestron XSIG Integraton",
+  "documentation": "https://github.com/jswent/hass-crestron-component/blob/master/README.md",
+  "dependencies": [],
+  "codeowners": ["@npope"],
+  "requirements": [],
+  "version": "0.2.3"
+}

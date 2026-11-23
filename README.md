@@ -1,5 +1,9 @@
 # home-assistant-crestron-component
 
+The [documented local installation snapshot](local-installation/README.md)
+preserves a separately modified installation, its configuration differences and
+validation limits. It does not replace the root component described below.
+
 > [!WARNING]
 > **This component is no longer supported.** It has been replaced by [Crestron XSIG for Home Assistant](https://github.com/jswent/crestron-ha) (`crestron-ha`), a new integration that is installed through HACS and configured entirely in the Home Assistant UI. This repository is archived and will not receive further updates or fixes.
 >
